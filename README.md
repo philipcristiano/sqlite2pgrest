@@ -1,15 +1,9 @@
-# calibre-metadata-api
-An API for reading the Calibre metadata DB file via API
+# sqlite2pgrest
 
-## Dev
+A utility to sync data from sqlite to Postgres via Postgrest
 
-Copy your metadata.db file to the root of this project.
+## Running
 
-
-
-## API
-
-`/v1/authors`
-`/v1/books`
-`/v1/shelves`
-`/v1/shelves/{shelf_id}/books`
+```
+sqlite2pgrest --sqlite-file app.db --postgrest-url=https://postgrest.example.com --postgrest-schema=schema_name --table table1 --table table2
+```

@@ -1,0 +1,53 @@
+name: Main Branch Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+
+  flake:
+    runs-on: nixos-runner
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0      # needed so git-cliff can see full history
+          fetch-tags: true    # ensure all tags are present
+
+      - name: Setup Attic cache
+        uses: ryanccn/attic-action@v0
+        with:
+          endpoint: ${{ secrets.ATTIC_ENDPOINT }}
+          cache: ${{ secrets.ATTIC_CACHE }}
+          token: ${{ secrets.ATTIC_TOKEN }}
+
+      - name: Update version
+        run: |
+          # Pull tags
+          git fetch --tags --force
+
+          # If git-cliff returns "vA.B.C" but VERSION file should be "A.B.C":
+          VERSION=$(git-cliff --config cliff.toml --bumped-version 2>/dev/null | sed 's/^v//')
+          echo "$VERSION" > VERSION
+
+      - name: Log in to Docker Hub
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build, Tag and push Docker
+
+        run: |
+          VERSION=$(cat VERSION)
+          nix --experimental-features 'nix-command flakes' build '#docker' -L --option log-lines 200
+
+          IMAGE=$(docker load < result | awk '/Loaded image:/ {print $3}')
+
+          docker tag $IMAGE ${{ vars.DOCKER_ORG }}/$IMAGE
+
+          git config user.name "forgejo-actions[bot]"
+          git config user.email "forgejo-actions[bot]@example.com"
+          git tag -a "v$VERSION" -m "Release v$VERSION"
+
+          git push origin "v$VERSION"
+          docker push ${{ vars.DOCKER_ORG }}/$IMAGE

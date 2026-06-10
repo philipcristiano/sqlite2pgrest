@@ -1,0 +1,49 @@
+[workspace]
+members = ["."]
+# Only check / build main crates by default (check all with `--workspace`)
+default-members = ["."]
+# Example has been deleted, but README.md remains
+resolver = "3"
+
+[package]
+name = "sqlite2pgrest"
+version = "0.0.1"
+edition = "2024"
+description = "Sqlite3 to Postgrest utility"
+license = "Apache-2.0"
+
+[[bin]]
+name = "sqlite2pgrest"
+path = "src/main.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[workspace.dependencies]
+anyhow = "1.0.82"
+serde = { version = "1.0.200", features = ["derive"] }
+sqlx = { version = "0.9.0", features = ["runtime-tokio", "tls-rustls", "sqlite", "macros", "uuid", "chrono", "rust_decimal", "sqlx-toml"] }
+
+[dependencies]
+anyhow = {workspace = true}
+serde = { workspace = true}
+sqlx = { workspace = true, features = ["sqlx-toml"]}
+chrono = {version = "0.4.41", features = ["serde"] }
+clap = { version = "4.5.4", features = ["derive", "env"]}
+serde_json = "1.0.116"
+service_conventions = { version = "0.0.38", features = ["tracing", "oidc"]}
+tokio = { version = "1.37.0", features = ["full"] }
+toml = "1.0.0"
+tonic = { version = "0.14.0", features = ["tls-aws-lc"] }
+tracing = "0.1.40"
+url = "2.5.0"
+uuid = {version = "1.8.0", features = ["v4"]}
+
+rust-embed = { version = "8.3.0", features = ["axum", "mime-guess", "mime_guess"] }
+redacted = "0.2.0"
+jsonwebtoken = "10.0.0"
+indexmap = { version = "2.5.0", features = ["serde"] }
+serde_qs = { version = "1.0.0", features = ["axum", "tracing"] }
+thiserror = "2.0.0"
+http = "1.1.0"
+futures-util = "0.3.32"
+reqwest = { version = "0.13.4", features = ["json"] }
