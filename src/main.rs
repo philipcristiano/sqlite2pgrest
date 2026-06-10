@@ -18,7 +18,7 @@ pub struct Args {
     token: Option<String>,
     #[arg(long)]
     token_file: Option<String>,
-    #[arg(short, long, value_enum, default_value = "DEBUG")]
+    #[arg(short, long, value_enum, default_value = "INFO")]
     log_level: tracing::Level,
     #[arg(long, action)]
     log_json: bool,
