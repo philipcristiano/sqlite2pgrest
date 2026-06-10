@@ -19,7 +19,7 @@ pub struct Args {
     #[arg(long)]
     token: Option<String>,
     #[arg(long)]
-    token_path: Option<String>,
+    token_file: Option<String>,
     #[arg(short, long, value_enum, default_value = "DEBUG")]
     log_level: tracing::Level,
     #[arg(long, action)]
@@ -64,7 +64,7 @@ async fn main() -> anyhow::Result<()>{
     service_conventions::tracing::setup(args.log_level);
 
     let app_config = read_app_config(args.config_file);
-    let token = if let Some(token_path) = args.token_path {
+    let token = if let Some(token_path) = args.token_file {
         Some(std::fs::read_to_string(token_path)?)
     } else {
         args.token.clone()
