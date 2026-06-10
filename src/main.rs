@@ -18,6 +18,8 @@ pub struct Args {
     postgrest_schema: String,
     #[arg(long)]
     token: Option<String>,
+    #[arg(long)]
+    token_path: Option<String>,
     #[arg(short, long, value_enum, default_value = "DEBUG")]
     log_level: tracing::Level,
     #[arg(long, action)]
@@ -62,6 +64,11 @@ async fn main() -> anyhow::Result<()>{
     service_conventions::tracing::setup(args.log_level);
 
     let app_config = read_app_config(args.config_file);
+    let token = if let Some(token_path) = args.token_path {
+        Some(std::fs::read_to_string(token_path)?)
+    } else {
+        args.token.clone()
+    };
 
     // start by making a database connection.
     tracing::info!("connecting to database");
@@ -82,14 +89,14 @@ async fn main() -> anyhow::Result<()>{
             buffer.push(new);
             if buffer.len() > 100 {
                 tracing::info!("Sending batch");
-                send_rows(&url, &args.postgrest_schema, &args.token, &buffer).await?;
+                send_rows(&url, &args.postgrest_schema, &token, &buffer).await?;
                 tracing::info!("Sent batch");
                 buffer.clear();
             }
         }
         if !buffer.is_empty() {
             tracing::info!("Sending batch");
-            send_rows(&url, &args.postgrest_schema, &args.token, &buffer).await?;
+            send_rows(&url, &args.postgrest_schema, &token, &buffer).await?;
             tracing::info!("Sent batch");
         }
     }
