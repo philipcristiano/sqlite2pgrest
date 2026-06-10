@@ -8,8 +8,6 @@ use sqlx::sqlite::SqlitePool;
 pub struct Args {
     #[arg(short, long, default_value = "127.0.0.1:3002")]
     bind_addr: String,
-    #[arg(short, long, default_value = "cma.toml")]
-    config_file: String,
     #[arg(short, long)]
     sqlite_file: String,
     #[arg(short, long)]
@@ -28,31 +26,6 @@ pub struct Args {
     table: Vec<String>,
 }
 
-#[derive(Clone, Debug, Deserialize)]
-struct AppConfig {
-    database_url: String,
-}
-
-#[derive(Clone, Debug)]
-struct AppState {
-    db: SqlitePool,
-}
-
-impl AppState {
-    fn from_config(item: AppConfig, db: SqlitePool) -> Self {
-        AppState { db }
-    }
-}
-
-fn read_app_config(path: String) -> AppConfig {
-    use std::fs;
-    let config_file_error_msg = format!("Could not read config file {}", path);
-    let config_file_contents = fs::read_to_string(path).expect(&config_file_error_msg);
-    let app_config: AppConfig =
-        toml::from_str(&config_file_contents).expect("Problems parsing config file");
-
-    app_config
-}
 
 use futures_util::StreamExt;
 use sqlx::sqlite::SqliteRow;
@@ -63,7 +36,6 @@ async fn main() -> anyhow::Result<()>{
     let args = Args::parse();
     service_conventions::tracing::setup(args.log_level);
 
-    let app_config = read_app_config(args.config_file);
     let token = if let Some(token_path) = args.token_file {
         Some(std::fs::read_to_string(token_path)?)
     } else {
@@ -72,7 +44,7 @@ async fn main() -> anyhow::Result<()>{
 
     // start by making a database connection.
     tracing::info!("connecting to database");
-    let pool = SqlitePool::connect(&app_config.database_url)
+    let pool = SqlitePool::connect(&args.sqlite_file)
         .await
         .expect("cannot connect to db");
     tracing::info!("connecting to calibre-web database");
